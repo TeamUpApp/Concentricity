@@ -28,7 +28,13 @@ public class MainActivity extends ActionBarActivity {
     }
 
     public class MyView extends View  {
-        float radius = 100;
+        float radius;// = 100;
+        boolean firstRun = true;
+
+       // bounds = new RectF(canvas.getClipBounds());
+        //centerX = bounds.centerX();
+       // centerY = bounds.centerY();
+
         float angleDeg = 0f;
 
         float angleDegOne = 0f;
@@ -68,9 +74,12 @@ public class MainActivity extends ActionBarActivity {
 
         int score = 0;
         float ball_speed = 1.0f;
-        float check_distance = 20f;
+        float check_distance = 40f;
         float speed_increment = 0.2f;
         int numberOfCorrect = 0;
+
+        // the number here will be divided by the canvas size to get the radius size
+        int GAME_SIZE =14;
 
         public MyView(Context context) {
             super(context);
@@ -98,6 +107,8 @@ public class MainActivity extends ActionBarActivity {
             angleDegOne = 0;
             angleDegTwo = 0;
             angleDegThree = 0;
+
+            getBallPaints();
 
         }
 
@@ -193,14 +204,87 @@ public class MainActivity extends ActionBarActivity {
             return false;
         }
 
+        private void getBallPaints(){
+            Paint guessPaint = new Paint();
+            guessPaint.setAntiAlias(true);
+            guessPaint.setStyle(Paint.Style.FILL);
+
+
+
+            float guessCol = rand;
+
+            float Posx = (float)Math.cos(Math.toRadians(guessCol));
+            float Posy = (float)Math.sin(Math.toRadians(guessCol));
+            float angle = (float)java.lang.Math.atan2(Posy, Posx);
+
+            float unit = angle/(2*PI);
+            if (unit < 0) {
+                unit += 1;
+            }
+
+            thirdBallPaint.setColor(interpColor(COLORS_PRIMARAY, unit));
+           // firstBallPaint.setColor(BLACK);
+
+
+            //  canvas.drawCircle(radius, radius, radius, guessPaint);
+
+            guessPaint.setColor(BLACK);
+            //  canvas.drawCircle(Posx, Posy, 20, guessPaint);
+
+            float guessCol2 = rand2;
+
+            Posx = (float)Math.cos(Math.toRadians(guessCol2));
+            Posy = (float)Math.sin(Math.toRadians(guessCol2));
+            angle = (float)java.lang.Math.atan2(Posy, Posx);
+
+            unit = angle/(2*PI);
+            if (unit < 0) {
+                unit += 1;
+            }
+
+            secondBallPaint.setColor(interpColor(COLORS_PRIMARAY, unit));
+          //  guessPaint.setColor(interpColor(COLORS_PRIMARAY, unit));
+            // canvas.drawCircle(x / 2 ,radius, radius, guessPaint);
+
+            float guessCol3 = rand3;
+
+            Posx = (float)Math.cos(Math.toRadians(guessCol3));
+            Posy = (float)Math.sin(Math.toRadians(guessCol3));
+            angle = (float)java.lang.Math.atan2(Posy, Posx);
+
+            unit = angle/(2*PI);
+            if (unit < 0) {
+                unit += 1;
+            }
+
+            firstBallPaint.setColor(interpColor(COLORS_PRIMARAY, unit));
+            // guessPaint.setColor(interpColor(COLORS_PRIMARAY, unit));
+            //  canvas.drawCircle(x-radius, radius, radius, guessPaint);
+        }
+
+        private void getRadiusSize(Canvas canvas) {
+
+            bounds = new RectF(canvas.getClipBounds());
+            centerX = bounds.centerX();
+            centerY = bounds.centerY();
+            radius = bounds.width()/GAME_SIZE;
+        }
 
         @Override
         protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);
 
+
+            if(firstRun){
+                getBallPaints();
+                getRadiusSize(canvas);
+                firstRun = false;
+            }
+
             drawStaticObjects(canvas);
             drawArcs(canvas);
             drawMovingCircles(canvas);
+
 
             if(freezeFirst){
 
@@ -211,7 +295,6 @@ public class MainActivity extends ActionBarActivity {
             if(freezeThird){
                 if(numberOfCorrect >= 2) {
                     ball_speed = ball_speed + speed_increment;
-                    Log.i("", "speed " + ball_speed);
                     freezeFirst = false;
                     freezeSecond = false;
                     freezeThird = false;
@@ -220,6 +303,8 @@ public class MainActivity extends ActionBarActivity {
                     rand3 = r.nextInt(359);
                     timerHandler.postDelayed(timerRunnable, 10);
                     numberOfCorrect = 0;
+                    firstRun = true;
+                   // getBallPaints();
                 }else {
                     reset();
                     timerHandler.postDelayed(timerRunnable, 10);
@@ -317,6 +402,8 @@ public class MainActivity extends ActionBarActivity {
             paint.setColor(Color.RED);
             canvas.drawCircle(col3XPos, col3YPos, 20, paint);*/
             //canvas.drawCircle(x / 2, y / 2,radius*5, paint);
+
+
         }
 
         public void drawStaticObjects(Canvas canvas){
@@ -342,60 +429,7 @@ public class MainActivity extends ActionBarActivity {
             primaryFramePaint.setStyle(Paint.Style.STROKE);
             primaryFramePaint.setColor(Color.BLUE);
 
-            Paint guessPaint = new Paint();
-            guessPaint.setAntiAlias(true);
-            guessPaint.setStyle(Paint.Style.FILL);
-
             canvas.drawPaint(canvasPaint);
-
-            float guessCol = rand;
-
-            float Posx = (float)Math.cos(Math.toRadians(guessCol));
-            float Posy = (float)Math.sin(Math.toRadians(guessCol));
-            float angle = (float)java.lang.Math.atan2(Posy, Posx);
-
-            float unit = angle/(2*PI);
-            if (unit < 0) {
-                unit += 1;
-            }
-
-            guessPaint.setColor(interpColor(COLORS_PRIMARAY, unit));
-
-
-            canvas.drawCircle(radius, radius, radius, guessPaint);
-
-            guessPaint.setColor(BLACK);
-          //  canvas.drawCircle(Posx, Posy, 20, guessPaint);
-
-            float guessCol2 = rand2;
-
-            Posx = (float)Math.cos(Math.toRadians(guessCol2));
-            Posy = (float)Math.sin(Math.toRadians(guessCol2));
-            angle = (float)java.lang.Math.atan2(Posy, Posx);
-
-            unit = angle/(2*PI);
-            if (unit < 0) {
-                unit += 1;
-            }
-
-            guessPaint.setColor(interpColor(COLORS_PRIMARAY, unit));
-            guessPaint.setColor(interpColor(COLORS_PRIMARAY, unit));
-            canvas.drawCircle(x / 2 ,radius, radius, guessPaint);
-
-            float guessCol3 = rand3;
-
-            Posx = (float)Math.cos(Math.toRadians(guessCol3));
-            Posy = (float)Math.sin(Math.toRadians(guessCol3));
-            angle = (float)java.lang.Math.atan2(Posy, Posx);
-
-            unit = angle/(2*PI);
-            if (unit < 0) {
-                unit += 1;
-            }
-
-            guessPaint.setColor(interpColor(COLORS_PRIMARAY, unit));
-           // guessPaint.setColor(interpColor(COLORS_PRIMARAY, unit));
-            canvas.drawCircle(x-radius, radius, radius, guessPaint);
 
             canvas.drawCircle(x / 2, y / 2, radius, redFillPaint);
             canvas.drawCircle(x / 2, y / 2, radius*2, lineFillPaint);
