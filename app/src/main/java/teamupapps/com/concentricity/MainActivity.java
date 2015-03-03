@@ -13,6 +13,11 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
 
 import java.util.Random;
 
@@ -21,12 +26,33 @@ import static android.graphics.Color.*;
 
 public class MainActivity extends ActionBarActivity {
 
+    private FrameLayout frame;
+    private LinearLayout llTop;
+    private LinearLayout llBottom;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(new MyView(this));
+        setContentView(R.layout.activity_main);
+        frame = (FrameLayout) findViewById(R.id.frame);
+        frame.addView(new MyView(this));
+        AdView mAdView = (AdView) findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
+
+        llTop = (LinearLayout)findViewById(R.id.ll_title);
+        llBottom = (LinearLayout)findViewById(R.id.ll_bottom);
     }
 
+    public void hideViews(){
+        llTop.setVisibility(View.INVISIBLE);
+        llBottom.setVisibility(View.INVISIBLE);
+    }
+
+    public void showViews(){
+        llTop.setVisibility(View.VISIBLE);
+        llBottom.setVisibility(View.VISIBLE);
+    }
     public class MyView extends View  {
         float radius;// = 100;
         boolean firstRun = true;
@@ -49,7 +75,7 @@ public class MainActivity extends ActionBarActivity {
         int	GRAY = Color.GRAY;
 
         //middle circles color, will be changed depending on chosen colors from the balls
-        int mColor = GRAY;
+        int mColor = WHITE;
         int	RED = Color.RED;
         int	GREEN = Color.GREEN;
 
@@ -80,6 +106,7 @@ public class MainActivity extends ActionBarActivity {
 
         // the number here will be divided by the canvas size to get the radius size
         int GAME_SIZE =14;
+        boolean isPlaying = false;
 
         public MyView(Context context) {
             super(context);
@@ -92,6 +119,8 @@ public class MainActivity extends ActionBarActivity {
         }
 
         public void reset(){
+             isPlaying = false;
+             showViews();
              score = 0;
              ball_speed = 1.0f;
              numberOfCorrect = 0;
@@ -117,7 +146,10 @@ public class MainActivity extends ActionBarActivity {
             switch (event.getAction() & MotionEvent.ACTION_MASK) {
                 case MotionEvent.ACTION_DOWN:
 
-
+                    if (!isPlaying){
+                        isPlaying = true;
+                        hideViews();
+                    }
 
                     if (!freezeFirst) {
                         float Posx = (float)Math.cos(Math.toRadians(angleDegOne));
@@ -134,12 +166,12 @@ public class MainActivity extends ActionBarActivity {
                        // Log.i("","angleDegOne "+ angleDegOne);
                         //Log.i("","rand "+ rand);
                         if(checkDistance(angleDegOne,rand)){
-                            thirdBallPaint.setColor(GREEN);
+                            thirdBallPaint.setColor(getResources().getColor(R.color.green));
                             score++;
                             numberOfCorrect++;
                         }
                         else {
-                            thirdBallPaint.setColor(RED);
+                            thirdBallPaint.setColor(getResources().getColor(R.color.red));
                             score--;
                         }
                     }
@@ -156,12 +188,12 @@ public class MainActivity extends ActionBarActivity {
                         secondBallPaint.setStyle(Paint.Style.FILL);
                         //secondBallPaint.setColor(interpColor(COLORS_PRIMARAY, unit));
                         if(checkDistance(angleDegTwo,rand2)){
-                            secondBallPaint.setColor(GREEN);
+                            secondBallPaint.setColor(getResources().getColor(R.color.green));
                             score++;
                             numberOfCorrect++;
                         }
                         else {
-                            secondBallPaint.setColor(RED);
+                            secondBallPaint.setColor(getResources().getColor(R.color.red));
                             score--;
                         }
                     }
@@ -178,12 +210,12 @@ public class MainActivity extends ActionBarActivity {
                         firstBallPaint.setStyle(Paint.Style.FILL);
                        // firstBallPaint.setColor(interpColor(COLORS_PRIMARAY, unit));
                         if(checkDistance(angleDegThree,rand3)){
-                            firstBallPaint.setColor(GREEN);
+                            firstBallPaint.setColor(getResources().getColor(R.color.green));
                             score++;
                             numberOfCorrect++;
                         }
                         else {
-                            firstBallPaint.setColor(RED);
+                            firstBallPaint.setColor(getResources().getColor(R.color.red));
                             score--;
                         }
                         //ball_speed = ball_speed +0.2f;
@@ -412,7 +444,7 @@ public class MainActivity extends ActionBarActivity {
 
             Paint canvasPaint = new Paint();
             canvasPaint.setStyle(Paint.Style.FILL);
-            canvasPaint.setColor(DKGRAY);
+            canvasPaint.setColor(getResources().getColor(R.color.background));
 
             Paint redFillPaint = new Paint();
             redFillPaint.setAntiAlias(true);
@@ -422,7 +454,7 @@ public class MainActivity extends ActionBarActivity {
             Paint lineFillPaint = new Paint();
             lineFillPaint.setAntiAlias(true);
             lineFillPaint.setStyle(Paint.Style.STROKE);
-            lineFillPaint.setColor(BLACK);
+            lineFillPaint.setColor(WHITE);
 
             Paint primaryFramePaint = new Paint();
             primaryFramePaint.setAntiAlias(true);
@@ -438,7 +470,7 @@ public class MainActivity extends ActionBarActivity {
 
             redFillPaint.setColor(BLACK);
             redFillPaint.setTextSize(100);
-            canvas.drawText(Integer.toString(score),x / 2,y / 2,redFillPaint);
+            canvas.drawText(Integer.toString(score),x / 2 - 10,y / 2 + 10,redFillPaint);
 
 
 

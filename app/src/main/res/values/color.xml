@@ -1,0 +1,8 @@
+<resources>
+
+    <color name="black_overlay">#66000000</color>
+    <color name="background">@android:color/background_dark</color>
+
+    <color name="red">#FF5252</color>
+    <color name="green">#32C24D</color>
+</resources>
