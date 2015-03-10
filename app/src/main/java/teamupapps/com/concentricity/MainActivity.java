@@ -8,6 +8,7 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.SweepGradient;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.Gravity;
@@ -48,7 +49,7 @@ public class MainActivity extends BaseGameActivity {
     private static final String LEADERBOARD_ID = "CgkIvIG4l7ocEAIQAQ";
     private static final String KEY_HIGH_SCORE = "high_score";
     Random randomGenerator = new Random();
-
+    MediaPlayer mediaPlayer ;
 
     int Low = 10;
     int High = 100;
@@ -86,6 +87,21 @@ public class MainActivity extends BaseGameActivity {
         // Begin loading your interstitial.
         interstitial.loadAd(popupRequest);
 
+        mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.music);
+        mediaPlayer.setLooping(true);
+        mediaPlayer.start();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mediaPlayer.pause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mediaPlayer.start();
     }
 
     @Override
@@ -269,6 +285,10 @@ public class MainActivity extends BaseGameActivity {
         int GAME_SIZE = 14;
         boolean isPlaying = false;
 
+        MediaPlayer mediaPlayerGood = MediaPlayer.create(getApplicationContext(), R.raw.good0);
+        MediaPlayer  mediaPlayerBad = MediaPlayer.create(getApplicationContext(), R.raw.bad4);
+
+
         public MyView(Context context) {
             super(context);
             // TODO Auto-generated constructor stub
@@ -333,6 +353,7 @@ public class MainActivity extends BaseGameActivity {
                         // Log.i("","angleDegOne "+ angleDegOne);
                         //Log.i("","rand "+ rand);
                         if (checkDistance(angleDegOne, rand)) {
+                            mediaPlayerGood.start();
                             thirdBallPaint.setColor(getResources().getColor(R.color.green));
                             score++;
                             showPointsAnimation("+1");
@@ -355,11 +376,13 @@ public class MainActivity extends BaseGameActivity {
                         secondBallPaint.setStyle(Paint.Style.FILL);
                         //secondBallPaint.setColor(interpColor(COLORS_PRIMARAY, unit));
                         if (checkDistance(angleDegTwo, rand2)) {
+                            mediaPlayerGood.start();
                             secondBallPaint.setColor(getResources().getColor(R.color.green));
                             score++;
                             showPointsAnimation("+1");
                             numberOfCorrect++;
                         } else {
+                            mediaPlayerBad.start();
                             secondBallPaint.setColor(getResources().getColor(R.color.red));
                             showPointsAnimation("-1");
                             score--;
@@ -376,11 +399,13 @@ public class MainActivity extends BaseGameActivity {
                         firstBallPaint.setStyle(Paint.Style.FILL);
                         // firstBallPaint.setColor(interpColor(COLORS_PRIMARAY, unit));
                         if (checkDistance(angleDegThree, rand3)) {
+                            mediaPlayerGood.start();
                             firstBallPaint.setColor(getResources().getColor(R.color.green));
                             score++;
                             showPointsAnimation("+1");
                             numberOfCorrect++;
                         } else {
+                            mediaPlayerBad.start();
                             firstBallPaint.setColor(getResources().getColor(R.color.red));
                             showPointsAnimation("-1");
                             score--;
