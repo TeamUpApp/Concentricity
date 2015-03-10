@@ -339,19 +339,15 @@ public class MainActivity extends BaseGameActivity {
                     }
 
                     if (!freezeFirst) {
-                        float Posx = (float) Math.cos(Math.toRadians(angleDegOne));
-                        float Posy = (float) Math.sin(Math.toRadians(angleDegOne));
-                        float angle = (float) java.lang.Math.atan2(Posy, Posx);
-                        freezeFirst = true;
-                        float unit = angle / (2 * PI);
-                        if (unit < 0) {
-                            unit += 1;
-                        }
+//                        float Posx = (float) Math.cos(Math.toRadians(angleDegOne));
+//                        float Posy = (float) Math.sin(Math.toRadians(angleDegOne));
+//                        float angle = (float) java.lang.Math.atan2(Posy, Posx);
+                      freezeFirst = true;
+//                        float unit = angle / (2 * PI);
+//                        if (unit < 0) {
+//                            unit += 1;
+//                        }
                         thirdBallPaint.setStyle(Paint.Style.FILL);
-                        //thirdBallPaint.setColor(interpColor(COLORS_PRIMARAY, unit));
-
-                        // Log.i("","angleDegOne "+ angleDegOne);
-                        //Log.i("","rand "+ rand);
                         if (checkDistance(angleDegOne, rand)) {
                             mediaPlayerGood.start();
                             thirdBallPaint.setColor(getResources().getColor(R.color.green));
@@ -364,15 +360,15 @@ public class MainActivity extends BaseGameActivity {
                             score--;
                         }
                     } else if (freezeFirst && !freezeSecond) {
-                        float Posx = (float) Math.cos(Math.toRadians(angleDegTwo));
-                        float Posy = (float) Math.sin(Math.toRadians(angleDegTwo));
-                        float angle = (float) java.lang.Math.atan2(Posy, Posx);
+//                        float Posx = (float) Math.cos(Math.toRadians(angleDegTwo));
+//                        float Posy = (float) Math.sin(Math.toRadians(angleDegTwo));
+//                        float angle = (float) java.lang.Math.atan2(Posy, Posx);
                         freezeFirst = true;
                         freezeSecond = true;
-                        float unit = angle / (2 * PI);
-                        if (unit < 0) {
-                            unit += 1;
-                        }
+//                        float unit = angle / (2 * PI);
+//                        if (unit < 0) {
+//                            unit += 1;
+//                        }
                         secondBallPaint.setStyle(Paint.Style.FILL);
                         //secondBallPaint.setColor(interpColor(COLORS_PRIMARAY, unit));
                         if (checkDistance(angleDegTwo, rand2)) {
@@ -388,16 +384,16 @@ public class MainActivity extends BaseGameActivity {
                             score--;
                         }
                     } else if (freezeFirst && freezeSecond && !freezeThird) {
-                        float Posx = (float) Math.cos(Math.toRadians(angleDegThree));
-                        float Posy = (float) Math.sin(Math.toRadians(angleDegThree));
-                        float angle = (float) java.lang.Math.atan2(Posy, Posx);
-                        freezeThird = true;
-                        float unit = angle / (2 * PI);
-                        if (unit < 0) {
-                            unit += 1;
-                        }
-                        firstBallPaint.setStyle(Paint.Style.FILL);
-                        // firstBallPaint.setColor(interpColor(COLORS_PRIMARAY, unit));
+//                        float Posx = (float) Math.cos(Math.toRadians(angleDegThree));
+//                        float Posy = (float) Math.sin(Math.toRadians(angleDegThree));
+//                        float angle = (float) java.lang.Math.atan2(Posy, Posx);
+                       freezeThird = true;
+//                        float unit = angle / (2 * PI);
+//                        if (unit < 0) {
+//                            unit += 1;
+//                        }
+                       firstBallPaint.setStyle(Paint.Style.FILL);
+//                        // firstBallPaint.setColor(interpColor(COLORS_PRIMARAY, unit));
                         if (checkDistance(angleDegThree, rand3)) {
                             mediaPlayerGood.start();
                             firstBallPaint.setColor(getResources().getColor(R.color.green));
