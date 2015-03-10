@@ -5,7 +5,7 @@ android {
         config {
             keyAlias 'teamUpApps'
             keyPassword 'teamup'
-            storeFile file('C:/Development/teamupkeystore.jks')
+            storeFile file('C:/Users/clazell/AndroidstudioProjects/teamUpKS/teamupkeystore.jks')
             storePassword 'teamup'
         }
     }
@@ -25,7 +25,7 @@ android {
             signingConfig signingConfigs.config
         }
         debug {
-            signingConfig signingConfigs.config
+            //signingConfig signingConfigs.config
         }
     }
 }

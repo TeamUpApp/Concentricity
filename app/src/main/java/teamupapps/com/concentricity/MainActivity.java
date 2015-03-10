@@ -8,6 +8,7 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.SweepGradient;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MotionEvent;
@@ -43,12 +44,12 @@ public class MainActivity extends BaseGameActivity {
     private MyView gameView;
     private static final String LEADERBOARD_ID = "CgkIvIG4l7ocEAIQAQ";
     private static final String KEY_HIGH_SCORE = "high_score";
-
+    MediaPlayer mediaPlayerMusic;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        mediaPlayerMusic = MediaPlayer.create(getApplicationContext(), R.raw.music);
         setContentView(R.layout.activity_main);
         frame = (FrameLayout) findViewById(R.id.frame);
         gameView = new MyView(this);
@@ -67,7 +68,7 @@ public class MainActivity extends BaseGameActivity {
 
         sharedPref = getPreferences(Context.MODE_PRIVATE);
         textHighScore.setText("" + getHighScore());
-
+        mediaPlayerMusic.start();
 
     }
 
@@ -89,6 +90,19 @@ public class MainActivity extends BaseGameActivity {
                     LEADERBOARD_ID,
                     newHighScore);
         }
+    }
+    @Override
+    public void onPause() {
+        super.onPause();  // Always call the superclass method first
+        mediaPlayerMusic.pause();
+
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();  // Always call the superclass method first
+        mediaPlayerMusic.start();
+
     }
 
     public void showLeaderBoard(View view) {
@@ -193,21 +207,27 @@ public class MainActivity extends BaseGameActivity {
 
         int score = 0;
         float ball_speed = 1.0f;
-        float check_distance = 40f;
+        float check_distance = 30f;
         float speed_increment = 0.2f;
         int numberOfCorrect = 0;
 
         // the number here will be divided by the canvas size to get the radius size
         int GAME_SIZE = 14;
         boolean isPlaying = false;
+        MediaPlayer mediaPlayer = MediaPlayer.create(this.getContext(), R.raw.good0);
+        MediaPlayer mediaPlayerBad = MediaPlayer.create(this.getContext(), R.raw.bad4);
+        Handler timerHandler = new Handler();
+        Runnable timerRunnable;
 
         public MyView(Context context) {
+
             super(context);
             // TODO Auto-generated constructor stub
         }
 
-        public void redraw() {
+        public void redraw(Canvas canvas) {
             this.invalidate();
+
         }
 
         public void gameOver() {
@@ -247,6 +267,7 @@ public class MainActivity extends BaseGameActivity {
 
                     if (!isPlaying) {
                         isPlaying = true;
+                        mediaPlayerMusic.setLooping(true);
                         hideViews();
                     }
 
@@ -265,10 +286,12 @@ public class MainActivity extends BaseGameActivity {
                         // Log.i("","angleDegOne "+ angleDegOne);
                         //Log.i("","rand "+ rand);
                         if (checkDistance(angleDegOne, rand)) {
+                            mediaPlayer.start();
                             thirdBallPaint.setColor(getResources().getColor(R.color.green));
                             score++;
                             numberOfCorrect++;
                         } else {
+                            mediaPlayerBad.start();
                             thirdBallPaint.setColor(getResources().getColor(R.color.red));
                             score--;
                         }
@@ -285,10 +308,12 @@ public class MainActivity extends BaseGameActivity {
                         secondBallPaint.setStyle(Paint.Style.FILL);
                         //secondBallPaint.setColor(interpColor(COLORS_PRIMARAY, unit));
                         if (checkDistance(angleDegTwo, rand2)) {
+                            mediaPlayer.start();
                             secondBallPaint.setColor(getResources().getColor(R.color.green));
                             score++;
                             numberOfCorrect++;
                         } else {
+                            mediaPlayerBad.start();
                             secondBallPaint.setColor(getResources().getColor(R.color.red));
                             score--;
                         }
@@ -304,10 +329,12 @@ public class MainActivity extends BaseGameActivity {
                         firstBallPaint.setStyle(Paint.Style.FILL);
                         // firstBallPaint.setColor(interpColor(COLORS_PRIMARAY, unit));
                         if (checkDistance(angleDegThree, rand3)) {
+                            mediaPlayer.start();
                             firstBallPaint.setColor(getResources().getColor(R.color.green));
                             score++;
                             numberOfCorrect++;
                         } else {
+                            mediaPlayerBad.start();
                             firstBallPaint.setColor(getResources().getColor(R.color.red));
                             score--;
                         }
@@ -402,10 +429,15 @@ public class MainActivity extends BaseGameActivity {
 
 
             if (firstRun) {
+
+                timerRunnable = new MyRunnable(canvas);
+
                 getBallPaints();
                 getRadiusSize(canvas);
+
                 firstRun = false;
             }
+
 
             drawStaticObjects(canvas);
             drawArcs(canvas);
@@ -468,6 +500,7 @@ public class MainActivity extends BaseGameActivity {
         }
 
         private void drawArcs(Canvas canvas) {
+            // mediaPlayerMusic.start();
             RectF bounds = new RectF(canvas.getClipBounds());
             float centerX = bounds.centerX();
             float centerY = bounds.centerY();
@@ -570,10 +603,13 @@ public class MainActivity extends BaseGameActivity {
             //canvas.drawCircle(0, 0, radius, guessPaint);
         }
 
-        Handler timerHandler = new Handler();
-        Runnable timerRunnable = new Runnable() {
+        private class MyRunnable implements Runnable {
+            private final Canvas canvas;
 
-            @Override
+            MyRunnable(final Canvas canvas) {
+                this.canvas = canvas;
+            }
+
             public void run() {
 
                 if (angleDeg < 360) {
@@ -606,10 +642,10 @@ public class MainActivity extends BaseGameActivity {
                     }
                 }
 
-                redraw();
+                redraw(canvas);
             }
-        };
+        }
+
 
     }
-
 }
