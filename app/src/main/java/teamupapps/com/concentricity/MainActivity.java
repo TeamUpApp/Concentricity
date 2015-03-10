@@ -107,26 +107,46 @@ public class MainActivity extends BaseGameActivity {
         llTop.setOnTouchListener(listener);
         llBottom.setOnTouchListener(listener);
         setupSoundButton();
-        mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.music);
-        mediaPlayer.setLooping(true);
-        mediaPlayer.start();
+        if(getSoundPref()){
+            playMusic();
+        }
+
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        mediaPlayer.pause();
+        if (mediaPlayer != null){
+            mediaPlayer.pause();
+        }
+
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        mediaPlayer.start();
+        if (mediaPlayer != null && getSoundPref()){
+            mediaPlayer.start();
+        }
     }
 
     @Override
     protected void attachBaseContext(Context newBase) {
         super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
+    }
+
+    public void playMusic(){
+        if (getSoundPref()){
+            mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.music);
+            mediaPlayer.setLooping(true);
+            mediaPlayer.start();
+        }
+    }
+
+    public void stopMusic(){
+        if (mediaPlayer != null && mediaPlayer.isPlaying()){
+            mediaPlayer.stop();
+        }
     }
 
     public void setupSoundButton() {
@@ -156,29 +176,37 @@ public class MainActivity extends BaseGameActivity {
             SharedPreferences.Editor editor = sharedPref.edit();
             editor.putInt(KEY_HIGH_SCORE, newHighScore);
             editor.commit();
-            Games.Leaderboards.submitScore(getApiClient(),
-                    LEADERBOARD_ID,
-                    newHighScore);
+            try {
+                Games.Leaderboards.submitScore(getApiClient(),
+                        LEADERBOARD_ID,
+                        newHighScore);
+            }catch(Exception e){
+
+            }
         }
     }
 
     public void updateAchievements(int newScore) {
         if (newScore > getHighScore()) {
-            if (newScore >= 10) {
-                Games.Achievements.unlock(getApiClient(),
-                        getString(R.string.achievenement_id_10));
-            } else if (newScore >= 25) {
-                Games.Achievements.unlock(getApiClient(),
-                        getString(R.string.achievenement_id_25));
-            } else if (newScore >= 50) {
-                Games.Achievements.unlock(getApiClient(),
-                        getString(R.string.achievenement_id_50));
-            } else if (newScore >= 100) {
-                Games.Achievements.unlock(getApiClient(),
-                        getString(R.string.achievenement_id_100));
-            } else if (newScore >= 200) {
-                Games.Achievements.unlock(getApiClient(),
-                        getString(R.string.achievenement_id_200));
+            try {
+                if (newScore >= 10) {
+                    Games.Achievements.unlock(getApiClient(),
+                            getString(R.string.achievenement_id_10));
+                } else if (newScore >= 25) {
+                    Games.Achievements.unlock(getApiClient(),
+                            getString(R.string.achievenement_id_25));
+                } else if (newScore >= 50) {
+                    Games.Achievements.unlock(getApiClient(),
+                            getString(R.string.achievenement_id_50));
+                } else if (newScore >= 100) {
+                    Games.Achievements.unlock(getApiClient(),
+                            getString(R.string.achievenement_id_100));
+                } else if (newScore >= 200) {
+                    Games.Achievements.unlock(getApiClient(),
+                            getString(R.string.achievenement_id_200));
+                }
+            }catch(Exception e){
+
             }
         }
     }
@@ -227,6 +255,11 @@ public class MainActivity extends BaseGameActivity {
     public void toggleSound(View view) {
         setSoundPref(!getSoundPref());
         setupSoundButton();
+        if (getSoundPref()){
+            playMusic();
+        }else{
+            stopMusic();
+        }
     }
 
     private void showPointsAnimation(String count) {
@@ -473,7 +506,10 @@ public class MainActivity extends BaseGameActivity {
 //                        }
                         thirdBallPaint.setStyle(Paint.Style.FILL);
                         if (checkDistance(angleDegOne, rand)) {
-                            mediaPlayerGood.start();
+                            if (getSoundPref()){
+                                mediaPlayerGood.start();
+                            }
+
                             thirdBallPaint.setColor(getResources().getColor(R.color.green));
                             score++;
                             showPointsAnimation("+1");
@@ -482,6 +518,9 @@ public class MainActivity extends BaseGameActivity {
                             thirdBallPaint.setColor(getResources().getColor(R.color.red));
                             showPointsAnimation("-1");
                             score--;
+                            if (getSoundPref()){
+                                mediaPlayerBad.start();
+                            }
                         }
                     } else if (freezeFirst && !freezeSecond) {
 //                        float Posx = (float) Math.cos(Math.toRadians(angleDegTwo));
@@ -496,13 +535,17 @@ public class MainActivity extends BaseGameActivity {
                         secondBallPaint.setStyle(Paint.Style.FILL);
                         //secondBallPaint.setColor(interpColor(COLORS_PRIMARAY, unit));
                         if (checkDistance(angleDegTwo, rand2)) {
-                            mediaPlayerGood.start();
+                            if (getSoundPref()){
+                                mediaPlayerGood.start();
+                            }
                             secondBallPaint.setColor(getResources().getColor(R.color.green));
                             score++;
                             showPointsAnimation("+1");
                             numberOfCorrect++;
                         } else {
-                            mediaPlayerBad.start();
+                            if (getSoundPref()){
+                                mediaPlayerBad.start();
+                            }
                             secondBallPaint.setColor(getResources().getColor(R.color.red));
                             showPointsAnimation("-1");
                             score--;
@@ -519,13 +562,17 @@ public class MainActivity extends BaseGameActivity {
                        firstBallPaint.setStyle(Paint.Style.FILL);
 //                        // firstBallPaint.setColor(interpColor(COLORS_PRIMARAY, unit));
                         if (checkDistance(angleDegThree, rand3)) {
-                            mediaPlayerGood.start();
+                            if (getSoundPref()){
+                                mediaPlayerGood.start();
+                            }
                             firstBallPaint.setColor(getResources().getColor(R.color.green));
                             score++;
                             showPointsAnimation("+1");
                             numberOfCorrect++;
                         } else {
-                            mediaPlayerBad.start();
+                            if (getSoundPref()){
+                                mediaPlayerBad.start();
+                            }
                             firstBallPaint.setColor(getResources().getColor(R.color.red));
                             showPointsAnimation("-1");
                             score--;
