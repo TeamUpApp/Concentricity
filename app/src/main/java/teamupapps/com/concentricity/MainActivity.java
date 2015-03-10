@@ -10,8 +10,11 @@ import android.graphics.Shader;
 import android.graphics.SweepGradient;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -19,6 +22,7 @@ import android.widget.Toast;
 
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.InterstitialAd;
 import com.google.android.gms.games.Games;
 
 import java.util.Random;
@@ -43,7 +47,12 @@ public class MainActivity extends BaseGameActivity {
     private MyView gameView;
     private static final String LEADERBOARD_ID = "CgkIvIG4l7ocEAIQAQ";
     private static final String KEY_HIGH_SCORE = "high_score";
+    Random randomGenerator = new Random();
 
+
+    int Low = 10;
+    int High = 100;
+    private InterstitialAd interstitial;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +76,15 @@ public class MainActivity extends BaseGameActivity {
 
         sharedPref = getPreferences(Context.MODE_PRIVATE);
         textHighScore.setText("" + getHighScore());
+        // Create the interstitial.
+        interstitial = new InterstitialAd(this);
+        interstitial.setAdUnitId(getResources().getString(R.string.popup_ad_unit_id));
 
+        // Create ad request.
+        AdRequest popupRequest = new AdRequest.Builder().build();
+
+        // Begin loading your interstitial.
+        interstitial.loadAd(popupRequest);
 
     }
 
@@ -101,6 +118,43 @@ public class MainActivity extends BaseGameActivity {
         }
     }
 
+    private void showPointsAnimation(String count) {
+        final TextView pointText = new TextView(MainActivity.this);
+        pointText.setTextSize(30);
+        pointText.setTextColor(getResources().getColor(android.R.color.white));
+        if (count.equals("+1")){
+            pointText.setTextColor(getResources().getColor(R.color.green));
+        }else{
+            pointText.setTextColor(getResources().getColor(R.color.red));
+        }
+        pointText.setText(count);
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams( FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT );
+        lp.gravity = Gravity.CENTER;
+        int dimen = randomGenerator.nextInt(High - Low) + Low;
+        //lp.setMargins(dimen, dimen, dimen, dimen);
+        frame.addView(pointText);
+        pointText.setLayoutParams(lp);
+        final Animation animAccelerate = AnimationUtils.loadAnimation(MainActivity.this, R.anim.accelerate);
+        animAccelerate.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                pointText.setVisibility(View.GONE);
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+        pointText.startAnimation(animAccelerate);
+    }
+
     public void updateScore(int score) {
         textScore.setText("" + score);
     }
@@ -118,8 +172,22 @@ public class MainActivity extends BaseGameActivity {
         frame.setVisibility(View.VISIBLE);
         llGameOver.setVisibility(View.GONE);
     }
+    // Invoke displayInterstitial() when you are ready to display an interstitial.
+    public void displayInterstitial() {
+        if (interstitial.isLoaded()) {
+            interstitial.show();
+        }else{
+            // Create ad request.
+            AdRequest popupRequest = new AdRequest.Builder().build();
+
+            // Begin loading your interstitial.
+            interstitial.loadAd(popupRequest);
+        }
+    }
+
 
     public void gameOverView(int newScore) {
+        displayInterstitial();
         textScore.setVisibility(View.GONE);
         textNewScore.setText("" + newScore);
         if (newScore > getHighScore()) {
@@ -267,9 +335,11 @@ public class MainActivity extends BaseGameActivity {
                         if (checkDistance(angleDegOne, rand)) {
                             thirdBallPaint.setColor(getResources().getColor(R.color.green));
                             score++;
+                            showPointsAnimation("+1");
                             numberOfCorrect++;
                         } else {
                             thirdBallPaint.setColor(getResources().getColor(R.color.red));
+                            showPointsAnimation("-1");
                             score--;
                         }
                     } else if (freezeFirst && !freezeSecond) {
@@ -287,9 +357,11 @@ public class MainActivity extends BaseGameActivity {
                         if (checkDistance(angleDegTwo, rand2)) {
                             secondBallPaint.setColor(getResources().getColor(R.color.green));
                             score++;
+                            showPointsAnimation("+1");
                             numberOfCorrect++;
                         } else {
                             secondBallPaint.setColor(getResources().getColor(R.color.red));
+                            showPointsAnimation("-1");
                             score--;
                         }
                     } else if (freezeFirst && freezeSecond && !freezeThird) {
@@ -306,9 +378,11 @@ public class MainActivity extends BaseGameActivity {
                         if (checkDistance(angleDegThree, rand3)) {
                             firstBallPaint.setColor(getResources().getColor(R.color.green));
                             score++;
+                            showPointsAnimation("+1");
                             numberOfCorrect++;
                         } else {
                             firstBallPaint.setColor(getResources().getColor(R.color.red));
+                            showPointsAnimation("-1");
                             score--;
                         }
                         //ball_speed = ball_speed +0.2f;
