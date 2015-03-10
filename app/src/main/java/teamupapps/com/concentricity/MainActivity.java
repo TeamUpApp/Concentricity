@@ -1,38 +1,49 @@
 package teamupapps.com.concentricity;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.SweepGradient;
-import android.os.Handler;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
+import com.google.android.gms.games.Games;
 
 import java.util.Random;
 
+import teamupapps.com.concentricity.basegameutils.BaseGameActivity;
 import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
-import static android.graphics.Color.*;
+import static android.graphics.Color.WHITE;
 
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends BaseGameActivity {
 
     private FrameLayout frame;
     private LinearLayout llTop;
     private LinearLayout llBottom;
+    private LinearLayout llGameOver;
     private TextView textScore;
+    private TextView textHighScore;
+    private TextView textNewScore;
+    private TextView textNewScoreHeading;
+    private SharedPreferences sharedPref;
+    private MyView gameView;
+    private static final String LEADERBOARD_ID = "CgkIvIG4l7ocEAIQAQ";
+    private static final String KEY_HIGH_SCORE = "high_score";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,7 +51,8 @@ public class MainActivity extends ActionBarActivity {
 
         setContentView(R.layout.activity_main);
         frame = (FrameLayout) findViewById(R.id.frame);
-        frame.addView(new MyView(this));
+        gameView = new MyView(this);
+        frame.addView(gameView);
         AdView mAdView = (AdView) findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder().build();
         mAdView.loadAd(adRequest);
@@ -48,6 +60,15 @@ public class MainActivity extends ActionBarActivity {
         llTop = (LinearLayout) findViewById(R.id.ll_title);
         llBottom = (LinearLayout) findViewById(R.id.ll_bottom);
         textScore = (TextView) findViewById(R.id.text_score);
+        textHighScore = (TextView) findViewById(R.id.txt_high_score);
+        textNewScore = (TextView) findViewById(R.id.text_new_score);
+        textNewScoreHeading = (TextView) findViewById(R.id.text_new_score_heading);
+        llGameOver = (LinearLayout) findViewById(R.id.ll_game_over);
+
+        sharedPref = getPreferences(Context.MODE_PRIVATE);
+        textHighScore.setText("" + getHighScore());
+
+
     }
 
     @Override
@@ -55,6 +76,34 @@ public class MainActivity extends ActionBarActivity {
         super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
     }
 
+    public int getHighScore() {
+        return sharedPref.getInt(KEY_HIGH_SCORE, 0);
+    }
+
+    public void updateHighScore(int newHighScore) {
+        if (newHighScore > getHighScore()) {
+            SharedPreferences.Editor editor = sharedPref.edit();
+            editor.putInt(KEY_HIGH_SCORE, newHighScore);
+            editor.commit();
+            Games.Leaderboards.submitScore(getApiClient(),
+                    LEADERBOARD_ID,
+                    newHighScore);
+        }
+    }
+
+    public void showLeaderBoard(View view) {
+        try {
+            startActivityForResult(Games.Leaderboards.getLeaderboardIntent(
+                            getApiClient(), LEADERBOARD_ID),
+                    2);
+        } catch (Exception e) {
+            Toast.makeText(this, "Could not connect", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void updateScore(int score) {
+        textScore.setText("" + score);
+    }
 
     public void hideViews() {
         llTop.setVisibility(View.INVISIBLE);
@@ -62,14 +111,39 @@ public class MainActivity extends ActionBarActivity {
         textScore.setVisibility(View.VISIBLE);
     }
 
-    public void updateScore(int score) {
-        textScore.setText("" + score);
-    }
-
     public void showViews() {
         llTop.setVisibility(View.VISIBLE);
         llBottom.setVisibility(View.VISIBLE);
         textScore.setVisibility(View.GONE);
+        frame.setVisibility(View.VISIBLE);
+        llGameOver.setVisibility(View.GONE);
+    }
+
+    public void gameOverView(int newScore) {
+        textScore.setVisibility(View.GONE);
+        textNewScore.setText("" + newScore);
+        if (newScore > getHighScore()) {
+            textNewScoreHeading.setText("New Best Score!");
+        } else {
+            textNewScoreHeading.setText("Your Score");
+        }
+        frame.setVisibility(View.INVISIBLE);
+        llGameOver.setVisibility(View.VISIBLE);
+    }
+
+    public void buttonRetryClicked(View view) {
+        showViews();
+        gameView.reset();
+    }
+
+    @Override
+    public void onSignInFailed() {
+
+    }
+
+    @Override
+    public void onSignInSucceeded() {
+
     }
 
     public class MyView extends View {
@@ -134,6 +208,12 @@ public class MainActivity extends ActionBarActivity {
 
         public void redraw() {
             this.invalidate();
+        }
+
+        public void gameOver() {
+            gameOverView(score);
+            updateHighScore(score);
+            textHighScore.setText("" + getHighScore());
 
         }
 
@@ -352,7 +432,7 @@ public class MainActivity extends ActionBarActivity {
                     firstRun = true;
                     // getBallPaints();
                 } else {
-                    reset();
+                    gameOver();
                     timerHandler.postDelayed(timerRunnable, 10);
                 }
             } else {

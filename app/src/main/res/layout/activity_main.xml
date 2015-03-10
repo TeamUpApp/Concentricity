@@ -7,8 +7,9 @@
     android:background="@color/background"
     tools:context=".MainActivity">
 
+
     <TextView
-        android:textSize="40sp"
+        android:textSize="50sp"
         android:id="@+id/text_score"
         android:layout_margin="10sp"
         android:visibility="gone"
@@ -17,6 +18,7 @@
         android:layout_alignParentTop="true"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
+
     <LinearLayout
         android:padding="10sp"
         android:id="@+id/ll_title"
@@ -52,11 +54,60 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"></FrameLayout>
 
+    <LinearLayout
+        android:visibility="gone"
+        android:id="@+id/ll_game_over"
+        android:layout_above="@id/ll_bottom"
+        android:orientation="vertical"
+        android:layout_alignLeft="@id/frame"
+        android:layout_alignTop="@id/frame"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:layout_weight="1"
+            android:textSize="35sp"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="0sp"
+            android:text="Game Over" />
+
+        <TextView
+            android:id="@+id/text_new_score_heading"
+            android:layout_weight="1"
+            android:textSize="25sp"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="0sp"
+            android:text="Your Score" />
+        <TextView
+            android:id="@+id/text_new_score"
+            android:layout_weight="1"
+            android:textSize="40sp"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="0sp"
+             />
+
+        <Button
+            android:drawableBottom="@mipmap/retry"
+            android:onClick="buttonRetryClicked"
+            android:textSize="25sp"
+            android:layout_weight="1"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:background="@color/background"
+            android:layout_width="wrap_content"
+            android:layout_height="0sp"
+            android:textColor="@android:color/white"
+            android:text="Retry" />
+
+    </LinearLayout>
+
     <com.google.android.gms.ads.AdView
         android:id="@+id/adView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-
         android:layout_centerHorizontal="true"
         android:layout_alignParentBottom="true"
         ads:adSize="BANNER"
@@ -83,6 +134,7 @@
                 android:layout_height="wrap_content" />
 
             <TextView
+                android:id="@+id/txt_high_score"
                 android:text="17"
                 android:textSize="30sp"
                 android:layout_gravity="center"
@@ -96,24 +148,28 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <ImageButton android:layout_weight="1"
-
+            <ImageButton
+                android:layout_weight="1"
+                android:onClick="showLeaderBoard"
                 android:background="@color/background"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:src="@mipmap/leaderboard" />
+
             <ImageButton
                 android:layout_weight="1"
                 android:background="@color/background"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:src="@mipmap/achieve" />
+
             <ImageButton
                 android:layout_weight="1"
                 android:background="@color/background"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:src="@mipmap/sound" />
+
             <ImageButton
                 android:layout_weight="1"
                 android:background="@color/background"
