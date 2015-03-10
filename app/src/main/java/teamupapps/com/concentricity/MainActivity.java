@@ -19,6 +19,7 @@ import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -46,11 +47,13 @@ public class MainActivity extends BaseGameActivity {
     private TextView textHighScore;
     private TextView textNewScore;
     private TextView textNewScoreHeading;
+    private ImageButton buttonSound;
     private SharedPreferences sharedPref;
     private MyView gameView;
     private static final String LEADERBOARD_ID = "CgkIvIG4l7ocEAIQAQ";
 
     private static final String KEY_HIGH_SCORE = "high_score";
+    private static final String KEY_SOUND = "sound";
     Random randomGenerator = new Random();
     MediaPlayer mediaPlayer ;
 
@@ -79,7 +82,7 @@ public class MainActivity extends BaseGameActivity {
         textNewScore = (TextView) findViewById(R.id.text_new_score);
         textNewScoreHeading = (TextView) findViewById(R.id.text_new_score_heading);
         llGameOver = (LinearLayout) findViewById(R.id.ll_game_over);
-
+        buttonSound = (ImageButton)findViewById(R.id.btn_sound);
         sharedPref = getPreferences(Context.MODE_PRIVATE);
         textHighScore.setText("" + getHighScore());
         // Create the interstitial.
@@ -103,7 +106,7 @@ public class MainActivity extends BaseGameActivity {
         };
         llTop.setOnTouchListener(listener);
         llBottom.setOnTouchListener(listener);
-
+        setupSoundButton();
         mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.music);
         mediaPlayer.setLooping(true);
         mediaPlayer.start();
@@ -126,8 +129,26 @@ public class MainActivity extends BaseGameActivity {
         super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
     }
 
+    public void setupSoundButton() {
+        if (getSoundPref()) {
+            buttonSound.setImageDrawable(getResources().getDrawable(R.mipmap.sound));
+        } else {
+            buttonSound.setImageDrawable(getResources().getDrawable(R.mipmap.mute));
+        }
+    }
+
     public int getHighScore() {
         return sharedPref.getInt(KEY_HIGH_SCORE, 0);
+    }
+
+    public Boolean getSoundPref() {
+        return sharedPref.getBoolean(KEY_SOUND, false);
+    }
+
+    public void setSoundPref(boolean soundOn) {
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putBoolean(KEY_SOUND, soundOn);
+        editor.commit();
     }
 
     public void updateHighScore(int newHighScore) {
@@ -201,6 +222,11 @@ public class MainActivity extends BaseGameActivity {
         }
         dialog.show();
 
+    }
+
+    public void toggleSound(View view) {
+        setSoundPref(!getSoundPref());
+        setupSoundButton();
     }
 
     private void showPointsAnimation(String count) {

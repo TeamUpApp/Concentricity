@@ -165,6 +165,8 @@
                 android:src="@mipmap/achieve" />
 
             <ImageButton
+                android:id="@+id/btn_sound"
+                android:onClick="toggleSound"
                 android:layout_weight="1"
                 android:background="@color/background"
                 android:layout_width="wrap_content"
