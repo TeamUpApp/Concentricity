@@ -308,11 +308,14 @@ public class MainActivity extends ActionBarActivity {
 
 
             if(firstRun){
+
                 getBallPaints();
                 getRadiusSize(canvas);
-                firstRun = false;
-            }
 
+
+                firstRun = false;
+
+            }
             drawStaticObjects(canvas);
             drawArcs(canvas);
             drawMovingCircles(canvas);
