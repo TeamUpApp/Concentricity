@@ -7,5 +7,13 @@
     <string name="banner_ad_unit_id">ca-app-pub-9937398086664264/4739591036</string>
     <string name="popup_ad_unit_id">ca-app-pub-9937398086664264/2965356232</string>
 
+    <string name="achievenement_id_10">CgkIvIG4l7ocEAIQAg</string>
+    <string name="achievenement_id_25">CgkIvIG4l7ocEAIQAw</string>
+    <string name="achievenement_id_50">CgkIvIG4l7ocEAIQBA</string>
+    <string name="achievenement_id_100">CgkIvIG4l7ocEAIQBQ</string>
+    <string name="achievenement_id_200">CgkIvIG4l7ocEAIQBg</string>
+    <string name="dialog_message">Match the spinning circles with the colour wheel. If you get two wrong, you lose.</string>
+    <string name="dialog_title">How to play</string>
+    <string name="ok">Okay</string>
 
 </resources>

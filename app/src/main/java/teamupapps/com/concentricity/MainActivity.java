@@ -1,6 +1,8 @@
 package teamupapps.com.concentricity;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -47,6 +49,7 @@ public class MainActivity extends BaseGameActivity {
     private SharedPreferences sharedPref;
     private MyView gameView;
     private static final String LEADERBOARD_ID = "CgkIvIG4l7ocEAIQAQ";
+
     private static final String KEY_HIGH_SCORE = "high_score";
     Random randomGenerator = new Random();
     MediaPlayer mediaPlayer ;
@@ -54,6 +57,8 @@ public class MainActivity extends BaseGameActivity {
     int Low = 10;
     int High = 100;
     private InterstitialAd interstitial;
+    private int mShortAnimationDuration;
+    private AlertDialog dialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,6 +91,18 @@ public class MainActivity extends BaseGameActivity {
 
         // Begin loading your interstitial.
         interstitial.loadAd(popupRequest);
+        mShortAnimationDuration = getResources().getInteger(
+                android.R.integer.config_mediumAnimTime);
+
+        View.OnTouchListener listener = new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                gameView.onTouchEvent(event);
+                return false;
+            }
+        };
+        llTop.setOnTouchListener(listener);
+        llBottom.setOnTouchListener(listener);
 
         mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.music);
         mediaPlayer.setLooping(true);
@@ -124,27 +141,79 @@ public class MainActivity extends BaseGameActivity {
         }
     }
 
-    public void showLeaderBoard(View view) {
-        try {
-            startActivityForResult(Games.Leaderboards.getLeaderboardIntent(
-                            getApiClient(), LEADERBOARD_ID),
-                    2);
-        } catch (Exception e) {
-            Toast.makeText(this, "Could not connect", Toast.LENGTH_SHORT).show();
+    public void updateAchievements(int newScore) {
+        if (newScore > getHighScore()) {
+            if (newScore >= 10) {
+                Games.Achievements.unlock(getApiClient(),
+                        getString(R.string.achievenement_id_10));
+            } else if (newScore >= 25) {
+                Games.Achievements.unlock(getApiClient(),
+                        getString(R.string.achievenement_id_25));
+            } else if (newScore >= 50) {
+                Games.Achievements.unlock(getApiClient(),
+                        getString(R.string.achievenement_id_50));
+            } else if (newScore >= 100) {
+                Games.Achievements.unlock(getApiClient(),
+                        getString(R.string.achievenement_id_100));
+            } else if (newScore >= 200) {
+                Games.Achievements.unlock(getApiClient(),
+                        getString(R.string.achievenement_id_200));
+            }
         }
+    }
+
+    public void showLeaderBoard(View view) {
+        if (!gameView.isPlaying) {
+            try {
+                startActivityForResult(Games.Leaderboards.getLeaderboardIntent(
+                                getApiClient(), LEADERBOARD_ID),
+                        2);
+            } catch (Exception e) {
+                Toast.makeText(this, "Could not connect", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    public void showAchievements(View view) {
+
+        if (!gameView.isPlaying) {
+            try {
+                startActivityForResult(Games.Achievements.getAchievementsIntent(
+                        getApiClient()), 1);
+            } catch (Exception e) {
+                Toast.makeText(this, "Could not connect", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    public void showInstructions(View view) {
+        if (dialog == null) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage(R.string.dialog_message);
+
+            // Add the buttons
+            builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    dialog.dismiss();
+                }
+            });
+            dialog = builder.create();
+        }
+        dialog.show();
+
     }
 
     private void showPointsAnimation(String count) {
         final TextView pointText = new TextView(MainActivity.this);
         pointText.setTextSize(30);
         pointText.setTextColor(getResources().getColor(android.R.color.white));
-        if (count.equals("+1")){
+        if (count.equals("+1")) {
             pointText.setTextColor(getResources().getColor(R.color.green));
-        }else{
+        } else {
             pointText.setTextColor(getResources().getColor(R.color.red));
         }
         pointText.setText(count);
-        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams( FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT );
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT);
         lp.gravity = Gravity.CENTER;
         int dimen = randomGenerator.nextInt(High - Low) + Low;
         //lp.setMargins(dimen, dimen, dimen, dimen);
@@ -175,11 +244,35 @@ public class MainActivity extends BaseGameActivity {
         textScore.setText("" + score);
     }
 
-    public void hideViews() {
-        llTop.setVisibility(View.INVISIBLE);
-        llBottom.setVisibility(View.INVISIBLE);
+    private void crossfade() {
+
+        // Set the content view to 0% opacity but visible, so that it is visible
+        // (but fully transparent) during the animation.
         textScore.setVisibility(View.VISIBLE);
+
+        llTop.setAlpha(1f);
+        llBottom.setAlpha(1f);
+        textScore.setAlpha(0f);
+        // textScore.setVisibility(View.VISIBLE);
+
+        // Animate the content view to 100% opacity, and clear any animation
+        // listener set on the view.
+        textScore.animate()
+                .alpha(1f)
+                .setDuration(mShortAnimationDuration)
+                .setListener(null);
+
+        llTop.animate()
+                .alpha(0f)
+                .setDuration(mShortAnimationDuration)
+                .setListener(null);
+        llBottom.animate()
+                .alpha(0f)
+                .setDuration(mShortAnimationDuration)
+                .setListener(null);
+
     }
+
 
     public void showViews() {
         llTop.setVisibility(View.VISIBLE);
@@ -187,12 +280,16 @@ public class MainActivity extends BaseGameActivity {
         textScore.setVisibility(View.GONE);
         frame.setVisibility(View.VISIBLE);
         llGameOver.setVisibility(View.GONE);
+        llTop.setAlpha(1f);
+        llBottom.setAlpha(1f);
+        textScore.setAlpha(1f);
     }
+
     // Invoke displayInterstitial() when you are ready to display an interstitial.
     public void displayInterstitial() {
         if (interstitial.isLoaded()) {
             interstitial.show();
-        }else{
+        } else {
             // Create ad request.
             AdRequest popupRequest = new AdRequest.Builder().build();
 
@@ -300,9 +397,9 @@ public class MainActivity extends BaseGameActivity {
 
         public void gameOver() {
             gameOverView(score);
+            updateAchievements(score);
             updateHighScore(score);
             textHighScore.setText("" + getHighScore());
-
         }
 
         public void reset() {
@@ -335,7 +432,8 @@ public class MainActivity extends BaseGameActivity {
 
                     if (!isPlaying) {
                         isPlaying = true;
-                        hideViews();
+                        //hideViews();
+                        crossfade();
                     }
 
                     if (!freezeFirst) {

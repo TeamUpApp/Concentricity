@@ -110,7 +110,7 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_alignParentBottom="true"
-        ads:adSize="BANNER"
+        ads:adSize="SMART_BANNER"
         ads:adUnitId="@string/banner_ad_unit_id"></com.google.android.gms.ads.AdView>
 
     <LinearLayout
@@ -157,6 +157,7 @@
                 android:src="@mipmap/leaderboard" />
 
             <ImageButton
+                android:onClick="showAchievements"
                 android:layout_weight="1"
                 android:background="@color/background"
                 android:layout_width="wrap_content"
@@ -171,6 +172,7 @@
                 android:src="@mipmap/sound" />
 
             <ImageButton
+                android:onClick="showInstructions"
                 android:layout_weight="1"
                 android:background="@color/background"
                 android:layout_width="wrap_content"
