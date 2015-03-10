@@ -4,6 +4,9 @@
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="android:textColor">@android:color/white</item>
+        <item name="android:textViewStyle">@style/AppTheme.Widget.TextView</item>
     </style>
-
+    <style name="AppTheme.Widget.TextView" parent="android:Widget.Holo.Light.TextView">
+        <item name="fontPath">CODE.otf</item>
+    </style>
 </resources>

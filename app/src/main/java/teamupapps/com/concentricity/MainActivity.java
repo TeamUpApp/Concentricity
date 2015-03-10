@@ -1,65 +1,158 @@
 package teamupapps.com.concentricity;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.SweepGradient;
-import android.os.Handler;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
+import com.google.android.gms.games.Games;
 
 import java.util.Random;
 
-import static android.graphics.Color.*;
+import teamupapps.com.concentricity.basegameutils.BaseGameActivity;
+import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
+
+import static android.graphics.Color.WHITE;
 
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends BaseGameActivity {
 
     private FrameLayout frame;
     private LinearLayout llTop;
     private LinearLayout llBottom;
+    private LinearLayout llGameOver;
+    private TextView textScore;
+    private TextView textHighScore;
+    private TextView textNewScore;
+    private TextView textNewScoreHeading;
+    private SharedPreferences sharedPref;
+    private MyView gameView;
+    private static final String LEADERBOARD_ID = "CgkIvIG4l7ocEAIQAQ";
+    private static final String KEY_HIGH_SCORE = "high_score";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
         frame = (FrameLayout) findViewById(R.id.frame);
-        frame.addView(new MyView(this));
+        gameView = new MyView(this);
+        frame.addView(gameView);
         AdView mAdView = (AdView) findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder().build();
         mAdView.loadAd(adRequest);
 
-        llTop = (LinearLayout)findViewById(R.id.ll_title);
-        llBottom = (LinearLayout)findViewById(R.id.ll_bottom);
+        llTop = (LinearLayout) findViewById(R.id.ll_title);
+        llBottom = (LinearLayout) findViewById(R.id.ll_bottom);
+        textScore = (TextView) findViewById(R.id.text_score);
+        textHighScore = (TextView) findViewById(R.id.txt_high_score);
+        textNewScore = (TextView) findViewById(R.id.text_new_score);
+        textNewScoreHeading = (TextView) findViewById(R.id.text_new_score_heading);
+        llGameOver = (LinearLayout) findViewById(R.id.ll_game_over);
+
+        sharedPref = getPreferences(Context.MODE_PRIVATE);
+        textHighScore.setText("" + getHighScore());
+
+
     }
 
-    public void hideViews(){
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
+    }
+
+    public int getHighScore() {
+        return sharedPref.getInt(KEY_HIGH_SCORE, 0);
+    }
+
+    public void updateHighScore(int newHighScore) {
+        if (newHighScore > getHighScore()) {
+            SharedPreferences.Editor editor = sharedPref.edit();
+            editor.putInt(KEY_HIGH_SCORE, newHighScore);
+            editor.commit();
+            Games.Leaderboards.submitScore(getApiClient(),
+                    LEADERBOARD_ID,
+                    newHighScore);
+        }
+    }
+
+    public void showLeaderBoard(View view) {
+        try {
+            startActivityForResult(Games.Leaderboards.getLeaderboardIntent(
+                            getApiClient(), LEADERBOARD_ID),
+                    2);
+        } catch (Exception e) {
+            Toast.makeText(this, "Could not connect", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void updateScore(int score) {
+        textScore.setText("" + score);
+    }
+
+    public void hideViews() {
         llTop.setVisibility(View.INVISIBLE);
         llBottom.setVisibility(View.INVISIBLE);
+        textScore.setVisibility(View.VISIBLE);
     }
 
-    public void showViews(){
+    public void showViews() {
         llTop.setVisibility(View.VISIBLE);
         llBottom.setVisibility(View.VISIBLE);
+        textScore.setVisibility(View.GONE);
+        frame.setVisibility(View.VISIBLE);
+        llGameOver.setVisibility(View.GONE);
     }
-    public class MyView extends View  {
+
+    public void gameOverView(int newScore) {
+        textScore.setVisibility(View.GONE);
+        textNewScore.setText("" + newScore);
+        if (newScore > getHighScore()) {
+            textNewScoreHeading.setText("New Best Score!");
+        } else {
+            textNewScoreHeading.setText("Your Score");
+        }
+        frame.setVisibility(View.INVISIBLE);
+        llGameOver.setVisibility(View.VISIBLE);
+    }
+
+    public void buttonRetryClicked(View view) {
+        showViews();
+        gameView.reset();
+    }
+
+    @Override
+    public void onSignInFailed() {
+
+    }
+
+    @Override
+    public void onSignInSucceeded() {
+
+    }
+
+    public class MyView extends View {
         float radius;// = 100;
         boolean firstRun = true;
 
-       // bounds = new RectF(canvas.getClipBounds());
+        // bounds = new RectF(canvas.getClipBounds());
         //centerX = bounds.centerX();
-       // centerY = bounds.centerY();
+        // centerY = bounds.centerY();
 
         float angleDeg = 0f;
 
@@ -71,17 +164,17 @@ public class MainActivity extends ActionBarActivity {
         boolean freezeSecond = false;
         boolean freezeThird = false;
 
-        int	BLACK = Color.BLACK;
-        int	GRAY = Color.GRAY;
+        int BLACK = Color.BLACK;
+        int GRAY = Color.GRAY;
 
         //middle circles color, will be changed depending on chosen colors from the balls
         int mColor = WHITE;
-        int	RED = Color.RED;
-        int	GREEN = Color.GREEN;
+        int RED = Color.RED;
+        int GREEN = Color.GREEN;
 
-        int[] COLORS_PRIMARAY  = new int[] {
-            0xFFFF0000, 0xFFFF00FF, 0xFF0000FF, 0xFF00FFFF, 0xFF00FF00,
-                    0xFFFFFF00, 0xFFFF0000
+        int[] COLORS_PRIMARAY = new int[]{
+                0xFFFF0000, 0xFFFF00FF, 0xFF0000FF, 0xFF00FFFF, 0xFF00FF00,
+                0xFFFFFF00, 0xFFFF0000
         };
 
         Random r = new Random();
@@ -105,7 +198,7 @@ public class MainActivity extends ActionBarActivity {
         int numberOfCorrect = 0;
 
         // the number here will be divided by the canvas size to get the radius size
-        int GAME_SIZE =14;
+        int GAME_SIZE = 14;
         boolean isPlaying = false;
 
         public MyView(Context context) {
@@ -115,15 +208,21 @@ public class MainActivity extends ActionBarActivity {
 
         public void redraw() {
             this.invalidate();
+        }
+
+        public void gameOver() {
+            gameOverView(score);
+            updateHighScore(score);
+            textHighScore.setText("" + getHighScore());
 
         }
 
-        public void reset(){
-             isPlaying = false;
-             showViews();
-             score = 0;
-             ball_speed = 1.0f;
-             numberOfCorrect = 0;
+        public void reset() {
+            isPlaying = false;
+            showViews();
+            score = 0;
+            ball_speed = 1.0f;
+            numberOfCorrect = 0;
 
             freezeFirst = false;
             freezeSecond = false;
@@ -146,75 +245,69 @@ public class MainActivity extends ActionBarActivity {
             switch (event.getAction() & MotionEvent.ACTION_MASK) {
                 case MotionEvent.ACTION_DOWN:
 
-                    if (!isPlaying){
+                    if (!isPlaying) {
                         isPlaying = true;
                         hideViews();
                     }
 
                     if (!freezeFirst) {
-                        float Posx = (float)Math.cos(Math.toRadians(angleDegOne));
-                        float Posy = (float)Math.sin(Math.toRadians(angleDegOne));
-                        float angle = (float)java.lang.Math.atan2(Posy, Posx);
+                        float Posx = (float) Math.cos(Math.toRadians(angleDegOne));
+                        float Posy = (float) Math.sin(Math.toRadians(angleDegOne));
+                        float angle = (float) java.lang.Math.atan2(Posy, Posx);
                         freezeFirst = true;
-                        float unit = angle/(2*PI);
+                        float unit = angle / (2 * PI);
                         if (unit < 0) {
                             unit += 1;
                         }
                         thirdBallPaint.setStyle(Paint.Style.FILL);
                         //thirdBallPaint.setColor(interpColor(COLORS_PRIMARAY, unit));
 
-                       // Log.i("","angleDegOne "+ angleDegOne);
+                        // Log.i("","angleDegOne "+ angleDegOne);
                         //Log.i("","rand "+ rand);
-                        if(checkDistance(angleDegOne,rand)){
+                        if (checkDistance(angleDegOne, rand)) {
                             thirdBallPaint.setColor(getResources().getColor(R.color.green));
                             score++;
                             numberOfCorrect++;
-                        }
-                        else {
+                        } else {
                             thirdBallPaint.setColor(getResources().getColor(R.color.red));
                             score--;
                         }
-                    }
-                    else if (freezeFirst && !freezeSecond) {
-                        float Posx = (float)Math.cos(Math.toRadians(angleDegTwo));
-                        float Posy = (float)Math.sin(Math.toRadians(angleDegTwo));
-                        float angle = (float)java.lang.Math.atan2(Posy, Posx);
+                    } else if (freezeFirst && !freezeSecond) {
+                        float Posx = (float) Math.cos(Math.toRadians(angleDegTwo));
+                        float Posy = (float) Math.sin(Math.toRadians(angleDegTwo));
+                        float angle = (float) java.lang.Math.atan2(Posy, Posx);
                         freezeFirst = true;
                         freezeSecond = true;
-                        float unit = angle/(2*PI);
+                        float unit = angle / (2 * PI);
                         if (unit < 0) {
                             unit += 1;
                         }
                         secondBallPaint.setStyle(Paint.Style.FILL);
                         //secondBallPaint.setColor(interpColor(COLORS_PRIMARAY, unit));
-                        if(checkDistance(angleDegTwo,rand2)){
+                        if (checkDistance(angleDegTwo, rand2)) {
                             secondBallPaint.setColor(getResources().getColor(R.color.green));
                             score++;
                             numberOfCorrect++;
-                        }
-                        else {
+                        } else {
                             secondBallPaint.setColor(getResources().getColor(R.color.red));
                             score--;
                         }
-                    }
-
-                    else  if (freezeFirst && freezeSecond && !freezeThird) {
-                        float Posx = (float)Math.cos(Math.toRadians(angleDegThree));
-                        float Posy = (float)Math.sin(Math.toRadians(angleDegThree));
-                        float angle = (float)java.lang.Math.atan2(Posy, Posx);
+                    } else if (freezeFirst && freezeSecond && !freezeThird) {
+                        float Posx = (float) Math.cos(Math.toRadians(angleDegThree));
+                        float Posy = (float) Math.sin(Math.toRadians(angleDegThree));
+                        float angle = (float) java.lang.Math.atan2(Posy, Posx);
                         freezeThird = true;
-                        float unit = angle/(2*PI);
+                        float unit = angle / (2 * PI);
                         if (unit < 0) {
                             unit += 1;
                         }
                         firstBallPaint.setStyle(Paint.Style.FILL);
-                       // firstBallPaint.setColor(interpColor(COLORS_PRIMARAY, unit));
-                        if(checkDistance(angleDegThree,rand3)){
+                        // firstBallPaint.setColor(interpColor(COLORS_PRIMARAY, unit));
+                        if (checkDistance(angleDegThree, rand3)) {
                             firstBallPaint.setColor(getResources().getColor(R.color.green));
                             score++;
                             numberOfCorrect++;
-                        }
-                        else {
+                        } else {
                             firstBallPaint.setColor(getResources().getColor(R.color.red));
                             score--;
                         }
@@ -223,39 +316,40 @@ public class MainActivity extends ActionBarActivity {
                     break;
 
             }
+            updateScore(score);
+
             return true;
 
         }
 
-        private boolean checkDistance(float angle1, float angle2){
-            float dist =  angle1 - angle2;
-            if(dist < check_distance && dist > -check_distance){
+        private boolean checkDistance(float angle1, float angle2) {
+            float dist = angle1 - angle2;
+            if (dist < check_distance && dist > -check_distance) {
                 return true;
             }
 
             return false;
         }
 
-        private void getBallPaints(){
+        private void getBallPaints() {
             Paint guessPaint = new Paint();
             guessPaint.setAntiAlias(true);
             guessPaint.setStyle(Paint.Style.FILL);
 
 
-
             float guessCol = rand;
 
-            float Posx = (float)Math.cos(Math.toRadians(guessCol));
-            float Posy = (float)Math.sin(Math.toRadians(guessCol));
-            float angle = (float)java.lang.Math.atan2(Posy, Posx);
+            float Posx = (float) Math.cos(Math.toRadians(guessCol));
+            float Posy = (float) Math.sin(Math.toRadians(guessCol));
+            float angle = (float) java.lang.Math.atan2(Posy, Posx);
 
-            float unit = angle/(2*PI);
+            float unit = angle / (2 * PI);
             if (unit < 0) {
                 unit += 1;
             }
 
             thirdBallPaint.setColor(interpColor(COLORS_PRIMARAY, unit));
-           // firstBallPaint.setColor(BLACK);
+            // firstBallPaint.setColor(BLACK);
 
 
             //  canvas.drawCircle(radius, radius, radius, guessPaint);
@@ -265,26 +359,26 @@ public class MainActivity extends ActionBarActivity {
 
             float guessCol2 = rand2;
 
-            Posx = (float)Math.cos(Math.toRadians(guessCol2));
-            Posy = (float)Math.sin(Math.toRadians(guessCol2));
-            angle = (float)java.lang.Math.atan2(Posy, Posx);
+            Posx = (float) Math.cos(Math.toRadians(guessCol2));
+            Posy = (float) Math.sin(Math.toRadians(guessCol2));
+            angle = (float) java.lang.Math.atan2(Posy, Posx);
 
-            unit = angle/(2*PI);
+            unit = angle / (2 * PI);
             if (unit < 0) {
                 unit += 1;
             }
 
             secondBallPaint.setColor(interpColor(COLORS_PRIMARAY, unit));
-          //  guessPaint.setColor(interpColor(COLORS_PRIMARAY, unit));
+            //  guessPaint.setColor(interpColor(COLORS_PRIMARAY, unit));
             // canvas.drawCircle(x / 2 ,radius, radius, guessPaint);
 
             float guessCol3 = rand3;
 
-            Posx = (float)Math.cos(Math.toRadians(guessCol3));
-            Posy = (float)Math.sin(Math.toRadians(guessCol3));
-            angle = (float)java.lang.Math.atan2(Posy, Posx);
+            Posx = (float) Math.cos(Math.toRadians(guessCol3));
+            Posy = (float) Math.sin(Math.toRadians(guessCol3));
+            angle = (float) java.lang.Math.atan2(Posy, Posx);
 
-            unit = angle/(2*PI);
+            unit = angle / (2 * PI);
             if (unit < 0) {
                 unit += 1;
             }
@@ -299,7 +393,7 @@ public class MainActivity extends ActionBarActivity {
             bounds = new RectF(canvas.getClipBounds());
             centerX = bounds.centerX();
             centerY = bounds.centerY();
-            radius = bounds.width()/GAME_SIZE;
+            radius = bounds.width() / GAME_SIZE;
         }
 
         @Override
@@ -307,28 +401,25 @@ public class MainActivity extends ActionBarActivity {
             super.onDraw(canvas);
 
 
-            if(firstRun){
-
+            if (firstRun) {
                 getBallPaints();
                 getRadiusSize(canvas);
-
-
                 firstRun = false;
-
             }
+
             drawStaticObjects(canvas);
             drawArcs(canvas);
             drawMovingCircles(canvas);
 
 
-            if(freezeFirst){
+            if (freezeFirst) {
 
             }
-            if(freezeSecond){
+            if (freezeSecond) {
 
             }
-            if(freezeThird){
-                if(numberOfCorrect >= 2) {
+            if (freezeThird) {
+                if (numberOfCorrect >= 2) {
                     ball_speed = ball_speed + speed_increment;
                     freezeFirst = false;
                     freezeSecond = false;
@@ -339,14 +430,14 @@ public class MainActivity extends ActionBarActivity {
                     timerHandler.postDelayed(timerRunnable, 10);
                     numberOfCorrect = 0;
                     firstRun = true;
-                   // getBallPaints();
-                }else {
-                    reset();
+                    // getBallPaints();
+                } else {
+                    gameOver();
                     timerHandler.postDelayed(timerRunnable, 10);
                 }
-            }else{
+            } else {
                 timerHandler.postDelayed(timerRunnable, 10);
-        }
+            }
         }
 
         private int interpColor(int colors[], float unit) {
@@ -358,12 +449,12 @@ public class MainActivity extends ActionBarActivity {
             }
 
             float p = unit * (colors.length - 1);
-            int i = (int)p;
+            int i = (int) p;
             p -= i;
 
             // now p is just the fractional part [0...1) and i is the index
             int c0 = colors[i];
-            int c1 = colors[i+1];
+            int c1 = colors[i + 1];
             int a = ave(Color.alpha(c0), Color.alpha(c1), p);
             int r = ave(Color.red(c0), Color.red(c1), p);
             int g = ave(Color.green(c0), Color.green(c1), p);
@@ -376,7 +467,7 @@ public class MainActivity extends ActionBarActivity {
             return s + java.lang.Math.round(p * (d - s));
         }
 
-        private void drawArcs(Canvas canvas){
+        private void drawArcs(Canvas canvas) {
             RectF bounds = new RectF(canvas.getClipBounds());
             float centerX = bounds.centerX();
             float centerY = bounds.centerY();
@@ -389,36 +480,36 @@ public class MainActivity extends ActionBarActivity {
             p.setStrokeWidth(50);
             p.setShader(s);
 
-            canvas.drawCircle(centerX, centerY, radius*5, p);
+            canvas.drawCircle(centerX, centerY, radius * 5, p);
 
         }
 
         private void drawMovingCircles(Canvas canvas) {
 
             bounds = new RectF(canvas.getClipBounds());
-             centerX = bounds.centerX();
-             centerY = bounds.centerY();
+            centerX = bounds.centerX();
+            centerY = bounds.centerY();
 
-            float firstXPos = (radius*2) * (float)Math.cos(Math.toRadians(angleDegThree)) + centerX;
-            float firstYPos = (radius*2) * (float)Math.sin(Math.toRadians(angleDegThree)) + centerY;
+            float firstXPos = (radius * 2) * (float) Math.cos(Math.toRadians(angleDegThree)) + centerX;
+            float firstYPos = (radius * 2) * (float) Math.sin(Math.toRadians(angleDegThree)) + centerY;
 
-            float secondXPos = (radius*3) * (float)Math.cos(Math.toRadians(angleDegTwo)) + centerX;
-            float secondYPos = (radius*3) * (float)Math.sin(Math.toRadians(angleDegTwo)) + centerY;
+            float secondXPos = (radius * 3) * (float) Math.cos(Math.toRadians(angleDegTwo)) + centerX;
+            float secondYPos = (radius * 3) * (float) Math.sin(Math.toRadians(angleDegTwo)) + centerY;
 
-            float thirdXPos = (radius*4) * (float)Math.cos(Math.toRadians(angleDegOne)) + centerX;
-            float thirdYPos = (radius*4) * (float)Math.sin(Math.toRadians(angleDegOne)) + centerY;
+            float thirdXPos = (radius * 4) * (float) Math.cos(Math.toRadians(angleDegOne)) + centerX;
+            float thirdYPos = (radius * 4) * (float) Math.sin(Math.toRadians(angleDegOne)) + centerY;
 
-            float colXPos = (radius*5) * (float)Math.cos(Math.toRadians(angleDeg)) + centerX;
-            float colYPos = (radius*5) * (float)Math.sin(Math.toRadians(angleDeg)) + centerY;
+            float colXPos = (radius * 5) * (float) Math.cos(Math.toRadians(angleDeg)) + centerX;
+            float colYPos = (radius * 5) * (float) Math.sin(Math.toRadians(angleDeg)) + centerY;
 
-            float col1XPos = (radius*5) * (float)Math.cos(Math.toRadians(rand)) + centerX;
-            float col1YPos = (radius*5) * (float)Math.sin(Math.toRadians(rand)) + centerY;
+            float col1XPos = (radius * 5) * (float) Math.cos(Math.toRadians(rand)) + centerX;
+            float col1YPos = (radius * 5) * (float) Math.sin(Math.toRadians(rand)) + centerY;
 
-            float col2XPos = (radius*5) * (float)Math.cos(Math.toRadians(rand2)) + centerX;
-            float col2YPos = (radius*5) * (float)Math.sin(Math.toRadians(rand2)) + centerY;
+            float col2XPos = (radius * 5) * (float) Math.cos(Math.toRadians(rand2)) + centerX;
+            float col2YPos = (radius * 5) * (float) Math.sin(Math.toRadians(rand2)) + centerY;
 
-            float col3XPos = (radius*5) * (float)Math.cos(Math.toRadians(rand3)) + centerX;
-            float col3YPos = (radius*5) * (float)Math.sin(Math.toRadians(rand3)) + centerY;
+            float col3XPos = (radius * 5) * (float) Math.cos(Math.toRadians(rand3)) + centerX;
+            float col3YPos = (radius * 5) * (float) Math.sin(Math.toRadians(rand3)) + centerY;
 
             canvas.drawCircle(firstXPos, firstYPos, 20, firstBallPaint);
             canvas.drawCircle(secondXPos, secondYPos, 20, secondBallPaint);
@@ -441,7 +532,7 @@ public class MainActivity extends ActionBarActivity {
 
         }
 
-        public void drawStaticObjects(Canvas canvas){
+        public void drawStaticObjects(Canvas canvas) {
             int x = getWidth();
             int y = getHeight();
 
@@ -467,51 +558,50 @@ public class MainActivity extends ActionBarActivity {
             canvas.drawPaint(canvasPaint);
 
             canvas.drawCircle(x / 2, y / 2, radius, redFillPaint);
-            canvas.drawCircle(x / 2, y / 2, radius*2, lineFillPaint);
-            canvas.drawCircle(x / 2, y / 2, radius*3, lineFillPaint);
-            canvas.drawCircle(x / 2, y / 2, radius*4, lineFillPaint);
+            canvas.drawCircle(x / 2, y / 2, radius * 2, lineFillPaint);
+            canvas.drawCircle(x / 2, y / 2, radius * 3, lineFillPaint);
+            canvas.drawCircle(x / 2, y / 2, radius * 4, lineFillPaint);
 
             redFillPaint.setColor(BLACK);
             redFillPaint.setTextSize(100);
-            canvas.drawText(Integer.toString(score),x / 2 - 10,y / 2 + 10,redFillPaint);
-
+            //canvas.drawText(Integer.toString(score),x / 2 - 10,y / 2 + 10,redFillPaint);
 
 
             //canvas.drawCircle(0, 0, radius, guessPaint);
         }
 
-    Handler timerHandler = new Handler();
+        Handler timerHandler = new Handler();
         Runnable timerRunnable = new Runnable() {
 
             @Override
             public void run() {
 
-                if (angleDeg < 360){
+                if (angleDeg < 360) {
                     angleDeg = angleDeg + ball_speed;
-                }else {
+                } else {
                     angleDeg = 0.0f;
                 }
 
-                if(!freezeFirst) {
-                    if (angleDegOne < 360){
+                if (!freezeFirst) {
+                    if (angleDegOne < 360) {
                         angleDegOne = angleDegOne + ball_speed;
-                    }else {
+                    } else {
                         angleDegOne = 0.0f;
                     }
                 }
 
-                if(!freezeSecond){
-                    if (angleDegTwo < 360){
+                if (!freezeSecond) {
+                    if (angleDegTwo < 360) {
                         angleDegTwo = angleDegTwo + ball_speed;
-                    }else {
+                    } else {
                         angleDegTwo = 0.0f;
                     }
                 }
 
-                if(!freezeThird){
-                    if (angleDegThree < 360){
+                if (!freezeThird) {
+                    if (angleDegThree < 360) {
                         angleDegThree = angleDegThree + ball_speed;
-                    }else {
+                    } else {
                         angleDegThree = 0.0f;
                     }
                 }
