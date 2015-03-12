@@ -13,6 +13,7 @@ import android.graphics.SweepGradient;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -57,6 +58,8 @@ public class MainActivity extends BaseGameActivity {
     Random randomGenerator = new Random();
     MediaPlayer mediaPlayer ;
 
+    //int GAME_SIZE;// = 14;
+
     int Low = 10;
     int High = 100;
     private InterstitialAd interstitial;
@@ -66,6 +69,12 @@ public class MainActivity extends BaseGameActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        DisplayMetrics displayMetrics = getApplicationContext().getResources().getDisplayMetrics();
+        int width = displayMetrics.widthPixels;
+        int height = displayMetrics.heightPixels;
+
+        //GAME_SIZE
 
         setContentView(R.layout.activity_main);
         frame = (FrameLayout) findViewById(R.id.frame);
@@ -438,7 +447,7 @@ public class MainActivity extends BaseGameActivity {
         int numberOfCorrect = 0;
 
         // the number here will be divided by the canvas size to get the radius size
-        int GAME_SIZE = 14;
+
         boolean isPlaying = false;
 
         MediaPlayer mediaPlayerGood = MediaPlayer.create(getApplicationContext(), R.raw.good0);
@@ -659,7 +668,7 @@ public class MainActivity extends BaseGameActivity {
             bounds = new RectF(canvas.getClipBounds());
             centerX = bounds.centerX();
             centerY = bounds.centerY();
-            radius = bounds.width() / GAME_SIZE;
+            radius = (bounds.height()/3)/5;// / GAME_SIZE;
         }
 
         @Override
