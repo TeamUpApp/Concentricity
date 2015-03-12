@@ -12,7 +12,7 @@
     <string name="achievenement_id_50">CgkIvIG4l7ocEAIQBA</string>
     <string name="achievenement_id_100">CgkIvIG4l7ocEAIQBQ</string>
     <string name="achievenement_id_200">CgkIvIG4l7ocEAIQBg</string>
-    <string name="dialog_message">Match the spinning circles with the colour wheel. If you get two wrong, you lose.</string>
+    <string name="dialog_message">Touch the screen to make the outer dot freeze. Match the spinning dots with the colour wheel. If you get two wrong, you lose.</string>
     <string name="dialog_title">How to play</string>
     <string name="ok">Okay</string>
 
